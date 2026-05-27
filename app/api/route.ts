@@ -298,7 +298,7 @@ export async function POST(req: Request) {
 
     let completed = false;
 
-    for (let attempt = 1; attempt <= 20; attempt++) {
+    for (let attempt = 1; attempt <= 2; attempt++) {
       const analysisRes = await fetch(
         `https://www.virustotal.com/api/v3/analyses/${analysisId}`,
         { headers }
@@ -323,7 +323,7 @@ export async function POST(req: Request) {
       }
 
       await new Promise((resolve) =>
-        setTimeout(resolve, 3000)
+        setTimeout(resolve, 10000)
       );
     }
 

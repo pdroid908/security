@@ -1,8 +1,4 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  images: { unoptimized: true },
-
+const nextConfig = {
   async headers() {
     return [
       {
@@ -10,35 +6,37 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "Content-Security-Policy",
-            // INI ADALAH KOMBINASI PALING AMAN YANG TETAP MENJALANKAN NEXT.JS
-            // 1. 'self': Mengizinkan script dari domainmu sendiri
-            // 2. 'unsafe-inline': DIBUTUHKAN agar Next.js & React berjalan (Tanpa ini, Next.js error)
-            // 3. 'unsafe-eval': Kadang dibutuhkan oleh beberapa fitur build Next.js
-            // 4. connect-src: Membatasi koneksi API hanya ke domain yang kamu izinkan
-            value: [
-              "default-src 'self'",
-              "script-src 'self' 'unsafe-inline'",
-              "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: https:",
-              "font-src 'self'",
-              "object-src 'none'",
-              "base-uri 'self'",
-              "frame-ancestors 'none'", // Proteksi Clickjacking
-              "upgrade-insecure-requests",
-              "connect-src 'self' https://www.virustotal.com https://www.virustotal.com/api/v3/ https://www.virustotal.com/vtapi/v2/ https://safebrowsing.googleapis.com",,
-            ].join("; "),
+            value:
+              "base-uri 'self'; " +
+             " form-action 'self';"+
+             "frame-ancestors 'none'; "+
+              "default-src 'self'; " +
+              
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+              "img-src 'self' data: https://*.googlesyndication.com https://*.google.com; " +
+              
+              "font-src 'self' data: https://fonts.gstatic.com; " +
+              "connect-src 'self' https://safebrowsing.googleapis.com https://www.virustotal.com; " +
+              "upgrade-insecure-requests;",
           },
-          { key: "X-Content-Type-Options", value: "nosniff" }, // Proteksi XSS (MIME sniffing)
-          { key: "X-Frame-Options", value: "DENY" }, // Proteksi Clickjacking
-          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          {
+            key: "X-Content-Type-Options",
+            value: "nosniff",
+          },
+          {
+            key: "X-Frame-Options",
+            value: "DENY",
+          },
           {
             key: "Strict-Transport-Security",
-            value: "max-age=63072000; includeSubDomains; preload",
+            value: "max-age=31536000; includeSubDomains; preload",
+          },
+          {
+            key: "Referrer-Policy",
+            value: "strict-origin-when-cross-origin", 
           },
         ],
       },
     ];
   },
 };
-
-export default nextConfig;
