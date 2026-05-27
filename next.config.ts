@@ -14,9 +14,9 @@ const nextConfig = {
               
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
               "img-src 'self' data: https://*.googlesyndication.com https://*.google.com; " +
-              
+              "script-src 'self' 'unsafe-inline'; " +
               "font-src 'self' data: https://fonts.gstatic.com; " +
-              "connect-src 'self' https://safebrowsing.googleapis.com https://www.virustotal.com; " +
+              "connect-src 'self' https://safebrowsing.googleapis.com https://www.virustotal.com https://api.virustotal.com https://www.virustotal.com; " +
               "upgrade-insecure-requests;",
           },
           {
