@@ -8,16 +8,16 @@ const nextConfig = {
             key: "Content-Security-Policy",
             value:
               "base-uri 'self'; " +
-             " form-action 'self';"+
-             "frame-ancestors 'none'; "+
+              "form-action 'self'; " +
+              "frame-ancestors 'none'; " +
               "default-src 'self'; " +
-              
+              "script-src 'self' 'unsafe-inline' https://www.virustotal.com https://*.virustotal.com; " +
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
-              "img-src 'self' data: https://*.googlesyndication.com https://*.google.com; " +
-              "script-src 'self' 'unsafe-inline'; " +
+              "img-src 'self' data: https: https://*.virustotal.com https://www.virustotal.com https://*.google.com https://*.googlesyndication.com; " +
               "font-src 'self' data: https://fonts.gstatic.com; " +
-              "connect-src 'self' https://safebrowsing.googleapis.com https://www.virustotal.com https://api.virustotal.com https://www.virustotal.com; " +
-              "upgrade-insecure-requests;",
+              "connect-src 'self' https://www.virustotal.com https://api.virustotal.com https://*.virustotal.com https://safebrowsing.googleapis.com; " +
+              "frame-src https://www.virustotal.com https://*.virustotal.com; " +
+              "upgrade-insecure-requests;"
           },
           {
             key: "X-Content-Type-Options",
@@ -33,7 +33,7 @@ const nextConfig = {
           },
           {
             key: "Referrer-Policy",
-            value: "strict-origin-when-cross-origin", 
+            value: "strict-origin-when-cross-origin",
           },
         ],
       },
