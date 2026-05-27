@@ -73,32 +73,7 @@ export default function SecurityPage() {
   return (
     <div className="min-h-screen bg-black text-white p-4 md:p-10 font-sans selection:bg-red-600/40 relative overflow-x-hidden">
       {/* --- SIDEBAR/DOCK MEDSOS (Responsive) --- */}
-      <aside className="fixed bottom-4 left-1/2 -translate-x-1/2 md:translate-x-0 md:bottom-auto md:top-1/2 md:left-4 md:left-auto z-50 flex flex-row md:flex-col gap-3 bg-zinc-900/80 md:bg-transparent p-3 md:p-0 rounded-full md:rounded-none border border-zinc-800 md:border-none backdrop-blur-md md:backdrop-blur-none shadow-2xl md:shadow-none">
-        <a
-          href="https://www.facebook.com/profile.php?id=61580560360762&locale=id_ID"
-          target="_blank"
-          rel="noopener noreferrer" // Tambahkan ini agar aman
-          className="p-3 bg-blue-600 rounded-full hover:scale-110 transition-all text-xs font-black"
-        >
-          FACEEBOOK
-        </a>
-        <a
-          href="https://www.tiktok.com/@artupstudio"
-          target="_blank"
-          rel="noopener noreferrer" // Tambahkan ini agar aman
-          className="p-3 bg-pink-600 rounded-full hover:scale-110 transition-all text-xs font-black"
-        >
-          TikTok
-        </a>
-        <a
-          href="https://www.youtube.com/@Artup-STUDIO"
-          target="_blank"
-          rel="noopener noreferrer" // Tambahkan ini agar aman
-          className=" p-3 bg-red-600 rounded-full hover:scale-110 transition-all text-xs font-black"
-        >
-          YouTube
-        </a>
-      </aside>
+      
 
 
 
@@ -120,14 +95,14 @@ export default function SecurityPage() {
         >
           foto converter
         </a>
-        {/* <a
-          href="https://www.youtube.com/@Artup-STUDIO"
+        <a
+          href="https://www.tiktok.com/@artupstd?lang=id-ID"
           target="_blank"
           rel="noopener noreferrer" // Tambahkan ini agar aman
           className=" p-3 bg-red-600 rounded-full hover:scale-110 transition-all text-xs font-black"
         >
-          YouTube
-        </a> */}
+          My TikTok
+        </a>
       </aside>
 
       

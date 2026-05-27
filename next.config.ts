@@ -1,48 +1,36 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // 1. Optimasi Gambar untuk Cloudflare (Opsional)
-  images: {
-    unoptimized: true, // Cloudflare Pages lebih stabil dengan ini untuk export statis
-  },
+  images: { unoptimized: true },
 
-  // 2. Proteksi Keamanan Full Power
   async headers() {
     return [
       {
         source: "/(.*)",
         headers: [
-          // Content Security Policy (CSP) untuk XSS
           {
             key: "Content-Security-Policy",
+            // INI ADALAH KOMBINASI PALING AMAN YANG TETAP MENJALANKAN NEXT.JS
+            // 1. 'self': Mengizinkan script dari domainmu sendiri
+            // 2. 'unsafe-inline': DIBUTUHKAN agar Next.js & React berjalan (Tanpa ini, Next.js error)
+            // 3. 'unsafe-eval': Kadang dibutuhkan oleh beberapa fitur build Next.js
+            // 4. connect-src: Membatasi koneksi API hanya ke domain yang kamu izinkan
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' https://*.monetag.com", // Tambahkan Monetag agar iklan tetap muncul
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: https: blob:",
+              "img-src 'self' data: https:",
               "font-src 'self'",
               "object-src 'none'",
               "base-uri 'self'",
-              "frame-ancestors 'none'", // Anti-Clickjacking
-              "upgrade-insecure-requests", // Paksa HTTPS
+              "frame-ancestors 'none'", // Proteksi Clickjacking
+              "upgrade-insecure-requests",
+              "connect-src 'self' https://www.virustotal.com https://safebrowsing.googleapis.com",
             ].join("; "),
           },
-          // Proteksi Sniffing
-          {
-            key: "X-Content-Type-Options",
-            value: "nosniff",
-          },
-          // Anti-Clickjacking tambahan
-          {
-            key: "X-Frame-Options",
-            value: "DENY",
-          },
-          // Referrer Policy
-          {
-            key: "Referrer-Policy",
-            value: "strict-origin-when-cross-origin",
-          },
-          // HSTS (HTTP Strict Transport Security)
+          { key: "X-Content-Type-Options", value: "nosniff" }, // Proteksi XSS (MIME sniffing)
+          { key: "X-Frame-Options", value: "DENY" }, // Proteksi Clickjacking
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           {
             key: "Strict-Transport-Security",
             value: "max-age=63072000; includeSubDomains; preload",
