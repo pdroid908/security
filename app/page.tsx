@@ -289,69 +289,7 @@ export default function SecurityPage() {
         )}
       </div>
 
-      <div className="max-w-2xl mx-auto mb-10 pt-4">
-        {/* --- TOMBOL EDUKASI (Trigger Ganti Video) --- */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          <button
-            onClick={() => setManualVideo("eIa6zppZ03A")} // ID Video Phishing
-            className={`py-3 px-2 rounded-xl border transition-all active:scale-95 text-[9px] font-black uppercase tracking-tighter ${
-              manualVideo === "eIa6zppZ03A"
-                ? "bg-red-600 border-red-400 text-white shadow-[0_0_15px_rgba(220,38,38,0.4)]"
-                : "bg-red-950/30 border-red-900/50 text-red-500 hover:bg-red-900/40"
-            }`}
-          >
-            🚨 JIKA PHISING?
-          </button>
-          <button
-            onClick={() => setManualVideo("tzYhNOu7Bdg")} // ID Video Celah/Default
-            className={`py-3 px-2 rounded-xl border transition-all active:scale-95 text-[9px] font-black uppercase tracking-tighter ${
-              manualVideo === "tzYhNOu7Bdgy"
-                ? "bg-orange-600 border-orange-400 text-white shadow-[0_0_15px_rgba(249,115,22,0.4)]"
-                : "bg-orange-950/30 border-orange-900/50 text-orange-500 hover:bg-orange-900/40"
-            }`}
-          >
-            ⚠️ JIKA ADA CELAH?
-          </button>
-        </div>
-
-        {/* --- SINGLE VIDEO PLAYER SECTION --- */}
-        <div className="mb-10 group">
-          <div className="bg-zinc-900/40 p-3 rounded-[2rem] border border-zinc-800 backdrop-blur-sm shadow-2xl relative overflow-hidden">
-            {/* Dekorasi Cahaya di Belakang Video */}
-            <div
-              className={`absolute inset-0 opacity-10 blur-[80px] transition-colors duration-700 ${
-                manualVideo === "eIa6zppZ03A" ? "bg-red-600" : "bg-orange-600"
-              }`}
-            />
-
-            <div className="aspect-video w-full rounded-2xl overflow-hidden shadow-inner border border-white/5 relative z-10 bg-black">
-              <iframe
-                key={manualVideo} // Key ini penting agar Iframe refresh & autoplay jalan saat ID berubah
-                src={`https://www.youtube-nocookie.com/embed/${manualVideo}?autoplay=0&mute=1&rel=0&modestbranding=1`}
-                title="Artup Security Education"
-                className="w-full h-full"
-                allow="accelerometer;  clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              ></iframe>
-            </div>
-
-            <div className="mt-3 flex justify-between items-center px-2 relative z-10">
-              <p className="text-[8px] font-bold text-zinc-500 uppercase tracking-[0.2em]">
-                Mode:{" "}
-                {manualVideo === "eIa6zppZ03A"
-                  ? "PERGI SAJA"
-                  : "WASPADA PUBLIK"}
-              </p>
-              <div className="flex gap-1">
-                <div
-                  className={`w-1.5 h-1.5 rounded-full animate-pulse ${manualVideo === "eIa6zppZ03A4" ? "bg-red-500" : "bg-orange-500"}`}
-                />
-                <div className="w-1.5 h-1.5 rounded-full bg-zinc-700" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      
 
       <footer className="mt-20 text-center pb-10">
         <p className="text-[9px] text-zinc-800 font-black uppercase tracking-[0.5em]">
