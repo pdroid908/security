@@ -17,7 +17,7 @@ const nextConfig: NextConfig = {
             // 4. connect-src: Membatasi koneksi API hanya ke domain yang kamu izinkan
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+              "script-src 'self' 'unsafe-inline'",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
               "font-src 'self'",
@@ -25,7 +25,7 @@ const nextConfig: NextConfig = {
               "base-uri 'self'",
               "frame-ancestors 'none'", // Proteksi Clickjacking
               "upgrade-insecure-requests",
-              "connect-src 'self' https://www.virustotal.com https://safebrowsing.googleapis.com",
+              "connect-src 'self' https://www.virustotal.com https://www.virustotal.com/api/v3/ https://www.virustotal.com/vtapi/v2/ https://safebrowsing.googleapis.com",,
             ].join("; "),
           },
           { key: "X-Content-Type-Options", value: "nosniff" }, // Proteksi XSS (MIME sniffing)
