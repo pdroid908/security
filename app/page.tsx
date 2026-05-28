@@ -118,7 +118,7 @@ export default function SecurityPage() {
           </p>
         </header>
 
-        <div className="bg-zinc-900/40 p-5 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border border-zinc-800/50 shadow-2xl mb-8 backdrop-blur-xl">
+        <div className="bg-zinc-900/40 p-5 md:p-8 rounded-4xl md:rounded-[2.5rem] border border-zinc-800/50 shadow-2xl mb-8 backdrop-blur-xl">
           <input
             type="text"
             value={urlInput}

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-export const runtime = 'nodejs';
+export const runtime = 'edge';
 
 const whitelist = [
   // --- KOMUNIKASI & MEDSOS (Official Only) ---
