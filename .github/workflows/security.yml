@@ -17,11 +17,11 @@ jobs:
     runs-on: ubuntu-latest
 
 
-   permissions:
+    permissions:
      contents: read
      security-events: write
 
-  steps:
+    steps:
   # =========================
   # CHECKOUT SOURCE
   # =========================
@@ -34,8 +34,8 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-      node-version: 20
-      cache: npm
+        node-version: 20
+        cache: npm
 
   # =========================
   # INSTALL DEPENDENCIES
@@ -67,7 +67,7 @@ jobs:
     - name: SonarCloud Scan
       uses: SonarSource/sonarqube-scan-action@v6
       env:
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   # =========================
   # PRODUCTION BUILD TEST
@@ -87,8 +87,8 @@ jobs:
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v4
       with:
-      name: next-build
-      path: .next
+        name: next-build
+        path: .next
 
   # =========================
   # SUCCESS MESSAGE
