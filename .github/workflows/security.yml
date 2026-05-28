@@ -16,7 +16,7 @@ jobs:
 security-quality-check:
 runs-on: ubuntu-latest
 
-```
+
 permissions:
   contents: read
   security-events: write
@@ -95,4 +95,4 @@ steps:
   # =========================
   - name: Pipeline Success
     run: echo "All security and quality checks passed."
-```
+
