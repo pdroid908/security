@@ -9,30 +9,28 @@ export default function SecurityPage() {
   const [result, setResult] = useState<SecurityResult | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const [statusText, setStatusText] = useState("SCAN LINK SEKARANG");
 
-  useEffect(() => {
-    let interval: ReturnType<typeof setTimeout>;
-    if (loading) {
-      const messages = [
-        "INITIALIZING ARTUP NEURAL CORE...",
-        "DECRYPTING PACKET OBFUSCATION...",
-        "SCANNING DATABASE REPUTATION...",
-        "EXTRACTING HEURISTIC PATTERNS...",
-        "CALCULATING RISK PROBABILITY...",
-        "FINALIZING SECURITY INTEGRITY...",
-      ];
-      let i = 0;
-      setStatusText(messages[0]);
-      interval = setInterval(() => {
-        i = (i + 1) % messages.length;
-        setStatusText(messages[i]);
-      }, 3000);
-    } else {
-      setStatusText("SCAN LINK SEKARANG");
-    }
-    return () => clearInterval(interval);
-  }, [loading]);
+  const messages = [
+    "INITIALIZING ARTUP NEURAL CORE...",
+    "DECRYPTING PACKET OBFUSCATION...",
+    "SCANNING DATABASE REPUTATION...",
+    "EXTRACTING HEURISTIC PATTERNS...",
+    "CALCULATING RISK PROBABILITY...",
+    "FINALIZING SECURITY INTEGRITY...",
+  ];
+const [statusIndex, setStatusIndex] = useState(0);
+const statusText = loading
+  ? messages[statusIndex]
+  : "SCAN LINK SEKARANG";
+useEffect(() => {
+  if (!loading) return;
+
+  const interval = setInterval(() => {
+    setStatusIndex((prev) => (prev + 1) % messages.length);
+  }, 3000);
+
+  return () => clearInterval(interval);
+}, [loading]);
 
   const handleCekKeamanan = async () => {
     if (!urlInput) return;
@@ -122,26 +120,35 @@ export default function SecurityPage() {
           </button>
         </div>
 
-        {result && !result.error && (() => {
-          // 1. Ambil status yang pasti ada
-          const status = result.finalStatus || "AMAN";
+        {result &&
+          !result.error &&
+          (() => {
+            // 1. Ambil status yang pasti ada
+            const status = result.finalStatus || "AMAN";
 
-          const getContainerStyles = (s: string) => {
-            switch (s) {
-              case "BAHAYA": return "bg-red-950/80 border-red-600 shadow-[0_0_60px_rgba(220,38,38,0.2)]";
-              case "HATI-HATI": return "bg-orange-950/80 border-orange-600 shadow-[0_0_40px_rgba(249,115,22,0.15)]";
-              default: return "bg-zinc-900/90 border-green-600 shadow-[0_0_40px_rgba(34,197,94,0.15)]";
-            }
-          };
+            const getContainerStyles = (s: string) => {
+              switch (s) {
+                case "BAHAYA":
+                  return "bg-red-950/80 border-red-600 shadow-[0_0_60px_rgba(220,38,38,0.2)]";
+                case "HATI-HATI":
+                  return "bg-orange-950/80 border-orange-600 shadow-[0_0_40px_rgba(249,115,22,0.15)]";
+                default:
+                  return "bg-zinc-900/90 border-green-600 shadow-[0_0_40px_rgba(34,197,94,0.15)]";
+              }
+            };
 
-          const getHeaderText = (s: string) => {
-            switch (s) {
-              case "BAHAYA": return "🚨 WEBSITE BERBAHAYA";
-              case "HATI-HATI": return "⚠️ PERLU KEWASPADAAN";
-              case "AMAN": return "✅ WEBSITE AMAN";
-              default: return "🛡️ AMAN TERVERIFIKASI";
-            }
-          };
+            const getHeaderText = (s: string) => {
+              switch (s) {
+                case "BAHAYA":
+                  return "🚨 WEBSITE BERBAHAYA";
+                case "HATI-HATI":
+                  return "⚠️ PERLU KEWASPADAAN";
+                case "AMAN":
+                  return "✅ WEBSITE AMAN";
+                default:
+                  return "🛡️ AMAN TERVERIFIKASI";
+              }
+            };
 
             return (
               <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
