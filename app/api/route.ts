@@ -140,95 +140,51 @@ const sensitiveKeywords = [
   "reward",
 ];
 
-export async function POST(req: Request) {
-  try {
-    const { url: inputUrl } = await req.json();
-    if (!inputUrl)
-      return NextResponse.json({ error: "URL is required" }, { status: 400 });
+function validateInput(url: string) {
+  if (url.length > 700 || /[<>"'@\s]/.test(url)) return false;
+  return true;
+}
 
-    // 1. Normalisasi & Decoder
-    let url = inputUrl.trim();
+function calculateTrustScore(
+  googleStatus: string,
+  vtStats: any,
+  isWhitelisted: boolean,
+  hasRedirect: boolean,
+  isManipulated: boolean,
+  hasSensitiveWord: boolean
+) {
+  let score = 100;
+  const flags: string[] = [];
 
-    const base64Regex =
-      /^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$/;
-    if (base64Regex.test(url) && url.length > 20) {
-      try {
-        const decoded = atob(url);
-        if (decoded.startsWith("http")) url = decoded;
-      } catch (_) {
-         
-      }
-    }
+  if (googleStatus === "BAHAYA") score -= 50;
+  
+  if (vtStats) {
+    if (vtStats.malicious >= 3) score -= 50;
+    else if (vtStats.malicious === 2) score -= 20;
+    else if (vtStats.malicious === 1) score -= 10;
+  }
 
-    // --- PROTEKSI PINTU DEPAN ---
-    if (url.length > 700 || /[<>"'@\s]/.test(url)) {
-      return NextResponse.json(
-        { error: "Invalid URL format", finalStatus: "BAHAYA" },
-        { status: 400 },
-      );
-    }
+  if (!isWhitelisted) {
+    score -= 10;
+    flags.push("Domain belum terverifikasi");
+  }
+  if (hasRedirect) {
+    score -= 10;
+    flags.push("Mengandung parameter redirect");
+  }
+  if (isManipulated) {
+    score -= 30;
+    flags.push("Meniru brand terkenal");
+  }
+  if (hasSensitiveWord && !isWhitelisted) {
+    score -= 15;
+    flags.push("Mengandung kata pancingan");
+  }
 
-    if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+  return { score: Math.max(0, score), flags };
+}
 
-    if (
-      url.includes("<") ||
-      url.includes(">") ||
-      url.includes('"') ||
-      url.includes(" ")
-    ) {
-      return NextResponse.json(
-        {
-          error: "Nice Try Diddy >_<",
-          finalStatus: "BAHAYA",
-        },
-        { status: 400 },
-      );
-    }
-
-    const urlObj = new URL(url);
-    const domain = urlObj.hostname.replace(/^www\./, "");
-
-    if (domain === "webartupstudio.pages.dev") {
-      return NextResponse.json(
-        { error: "Self-scan detected", finalStatus: "AMAN" },
-        { status: 400 },
-      );
-    }
-
-    // 3. AMBIL DOMAIN
-
-    const parts = domain.split(".");
-    const rootDomain =
-      domain.endsWith(".co.id") || domain.endsWith(".net.id")
-        ? parts.slice(-3).join(".")
-        : parts.slice(-2).join(".");
-
-    // 1. BONGKAR KODE RAHASIA (Contoh: %6c%6f -> lo)
-    const decodedUrl = decodeURIComponent(url).toLowerCase();
-    const hostname = urlObj.hostname.replace("www.", "");
-    const cleanUrlText = decodedUrl
-      .replace(/[^a-z0-9]/g, "")
-      .replace(/[\u200B-\u200D\uFEFF]/g, "");
-
-    // 2. CEK DOMAIN KETAT (Gunakan endsWith agar tidak tertipu bca.co.id.palsu.com)
-    const isWhitelisted = whitelist.some(
-      (w) => hostname === w || hostname.endsWith("." + w),
-    );
-
-    // 3. DETEKSI REDIRECT (Cek semua parameter, jika ada 'http' di dalamnya = Redirect)
-    const hasRedirectParam = Array.from(urlObj.searchParams.values()).some(
-      (val) => val.includes("http://") || val.includes("https://"),
-    );
-
-    // 4. DETEKSI MANIPULASI (Jika ada nama bank di domain asing)
-    const isManipulated =
-      !isWhitelisted &&
-      whitelist.some((w) => hostname.includes(w.split(".")[0]));
-
-    console.log(`\n--- START SCAN: ${url} ---`);
-
-    // 2. FUNGSI VIRUSTOTAL (DIPERBAIKI)
-    const getVirusTotalData = async (targetUrl: string) => {
+const getVirusTotalData = async (targetUrl: string) => {
       const cleanUrl = targetUrl.trim();
 
       const headers = {
@@ -359,7 +315,7 @@ export async function POST(req: Request) {
     };
 
     // 3. FUNGSI GOOGLE DENGAN DEBUG LENGKAP
-    const fetchGoogleWithTimeout = async (targetUrl: string) => {
+const fetchGoogleWithTimeout = async (targetUrl: string) => {
       console.log(`[GOOGLE] Memulai pengecekan Safe Browsing...`);
       const controller = new AbortController();
       const id = setTimeout(() => controller.abort(), 7000); // 7 detik biar lebih lega
@@ -413,127 +369,64 @@ export async function POST(req: Request) {
       }
     };
 
-    // EKSEKUSI PARALEL
+export async function POST(req: Request) {
+  try {
+    const { url: inputUrl } = await req.json();
+    if (!inputUrl) return NextResponse.json({ error: "URL is required" }, { status: 400 });
+
+    let url = inputUrl.trim();
+
+    // Decoding Base64 (disederhanakan)
+    const base64Regex = /^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$/;
+    if (base64Regex.test(url) && url.length > 20) {
+      try {
+        const decoded = atob(url);
+        if (decoded.startsWith("http")) url = decoded;
+      } catch { /* Error diabaikan */ }
+    }
+
+    if (!validateInput(url)) return NextResponse.json({ error: "Invalid URL", finalStatus: "BAHAYA" }, { status: 400 });
+    if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+
+    const urlObj = new URL(url);
+    const hostname = urlObj.hostname.replace("www.", "");
+    
+    // Scan Paralel
     const [googleData, vtData] = await Promise.all([
       fetchGoogleWithTimeout(url),
       getVirusTotalData(url),
     ]);
 
-    // --- 4. ANALISIS GOOGLE (SINKRONISASI 3 STATUS) ---
-    let googleStatus = "AMAN";
-    if (googleData?.matches?.length > 0) {
-      googleStatus = "BAHAYA";
-    }
-
-    // --- 5. ANALISIS VIRUSTOTAL ---
+    // Analisis Hasil
+    const googleStatus = googleData?.matches?.length > 0 ? "BAHAYA" : "AMAN";
     const vtStats = vtData?.data?.attributes?.last_analysis_stats;
-    let vtStatus = "AMAN";
+    
+    const isWhitelisted = whitelist.some((w) => hostname === w || hostname.endsWith("." + w));
+    const hasRedirect = Array.from(urlObj.searchParams.values()).some((v) => v.includes("http"));
+    const isManipulated = !isWhitelisted && whitelist.some((w) => hostname.includes(w.split(".")[0]));
+    
+    const decodedUrl = decodeURIComponent(url).toLowerCase();
+    const hasSensitiveWord = sensitiveKeywords.some((w) => decodedUrl.includes(w));
 
-    if (!vtStats) {
-      vtStatus = "TIDAK ADA DATA";
-    } else if (vtStats.malicious >= 3) {
-      vtStatus = "BAHAYA";
-    } else if (vtStats.malicious === 2) {
-      vtStatus = "MENCURIGAKAN";
-    } else if (vtStats.malicious === 1) {
-      vtStatus = "PERLU PERHATIAN";
-    }
+    const { score, flags } = calculateTrustScore(googleStatus, vtStats, isWhitelisted, hasRedirect, isManipulated, hasSensitiveWord);
 
-    let trustScore = 100;
-
-    if (googleStatus === "BAHAYA") {
-      trustScore -= 50;
-    }
-
-    if (vtStats) {
-      if (vtStats.malicious >= 3) {
-        trustScore -= 50;
-      } else if (vtStats.malicious === 2) {
-        trustScore -= 20;
-      } else if (vtStats.malicious === 1) {
-        trustScore -= 10;
-      }
-    }
-
-    // --- 6. ARTUP HEURISTIC (URUTAN PRIORITAS BARU) ---
-    const artupHeuristic: string[] = []; // Gunakan const, bukan let
-
-    if (!isWhitelisted) {
-      trustScore -= 10;
-      artupHeuristic.push(
-        "Domain belum terverifikasi, jangan masukan PIN, OTP, password",
-      );
-    }
-
-    if (hasRedirectParam) {
-      trustScore -= 10;
-      artupHeuristic.push("Mengandung parameter redirect");
-    }
-
-    if (isManipulated) {
-      trustScore -= 30;
-      artupHeuristic.push("meniru brand terkenal");
-    }
-
-    const hasSensitiveWord = sensitiveKeywords.some(
-      (word) => cleanUrlText.includes(word) || decodedUrl.includes(word),
-    );
-
-    if (hasSensitiveWord && !isWhitelisted) {
-      trustScore -= 15;
-      artupHeuristic.push("Mengandung kata pancingan");
-    }
-
-    trustScore = Math.max(0, trustScore);
-
-    let finalStatus = "";
-    let userMessage = "";
-
-    if (googleStatus === "BAHAYA" || trustScore < 50) {
-      finalStatus = "BAHAYA";
-
-      userMessage = "Terdapat indikasi phishing, malware, reputasi buruk.";
-    } else if (trustScore < 90) {
-      finalStatus = "HATI-HATI";
-
-      userMessage =
-        "Tidak ditemukan malware, namun jangan memasukkan password, OTP, PIN, atau data sensitif sebelum memastikan identitas situs.";
-    } else if (trustScore < 100) {
-      finalStatus = "AMAN";
-
-      userMessage = "Website terlihat aman, tetap gunakan kewaspadaan standar.";
-    } else {
-      finalStatus = "AMAN TERVERIFIKASI";
-
-      userMessage = "Tidak ditemukan indikasi malware atau phishing.";
-    }
-
+    // Penentuan Status Akhir
+    let finalStatus = "AMAN";
+if (score < 50) {
+  finalStatus = "BAHAYA";
+} else if (score < 90) {
+  finalStatus = "HATI-HATI";
+}
     return NextResponse.json({
-      trustScore,
+      trustScore: score,
       googleStatus,
-      virusTotal: vtStatus,
-      vtDetails: vtStats,
       finalStatus,
-      userMessage,
-
-      details: {
-        domain,
-        rootDomain,
-        isWhitelisted,
-      },
-
-      heuristicFlags: artupHeuristic,
+      heuristicFlags: flags,
+      details: { domain: hostname, isWhitelisted }
     });
-  } catch (error: unknown) {
-    // Gunakan variabel 'message' yang sudah kita buat tadi
-    const errorMessage =
-      error instanceof Error ? error.message : "Internal Server Error";
 
+  } catch (error) {
     console.error("[CRITICAL ERROR]", error);
-
-    return NextResponse.json(
-      { error: "Internal Server Error", msg: errorMessage }, // Gunakan errorMessage di sini
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

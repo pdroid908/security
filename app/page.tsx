@@ -3,13 +3,33 @@ import { useState, useEffect } from "react";
 import { SecurityResult } from "@/types";
 
 // 1. Tambahkan fungsi ini di atas komponen SecurityPage
+const GOOGLE_STATUS_MAP: Record<string, { color: string; label: string }> = {
+  BAHAYA: { color: "text-red-500", label: "⚠️ BLACKLISTED" },
+  "ADA CELAH": { color: "text-orange-500", label: "❓ BELUM TERVERIFIKASI" },
+  DEFAULT: { color: "text-green-500", label: "✔️ VERIFIED" },
+};
 
+const VIRUS_STATUS_MAP: Record<string, { color: string; label: string }> = {
+  BAHAYA: { color: "text-red-500", label: "⚠️ DETECTED" }, // Label dinamis nanti kita handle
+  "TIDAK ADA DATA": { color: "text-orange-500", label: "NO RECORD" },
+  DEFAULT: { color: "text-green-500", label: "✔️ NO VIRUS" },
+};
 export default function SecurityPage() {
   const [urlInput, setUrlInput] = useState("");
   const [result, setResult] = useState<SecurityResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const getGoogle = result
+    ? GOOGLE_STATUS_MAP[result.googleStatus] || GOOGLE_STATUS_MAP.DEFAULT
+    : GOOGLE_STATUS_MAP.DEFAULT;
 
-
+  const getVirus = result
+    ? VIRUS_STATUS_MAP[result.virusTotal] || VIRUS_STATUS_MAP.DEFAULT
+    : VIRUS_STATUS_MAP.DEFAULT;
+  const getTrustColor = (score: number) => {
+    if (score < 50) return "bg-red-500";
+    if (score < 90) return "bg-orange-500";
+    return "bg-green-500";
+  };
   const messages = [
     "INITIALIZING ARTUP NEURAL CORE...",
     "DECRYPTING PACKET OBFUSCATION...",
@@ -18,19 +38,17 @@ export default function SecurityPage() {
     "CALCULATING RISK PROBABILITY...",
     "FINALIZING SECURITY INTEGRITY...",
   ];
-const [statusIndex, setStatusIndex] = useState(0);
-const statusText = loading
-  ? messages[statusIndex]
-  : "SCAN LINK SEKARANG";
-useEffect(() => {
-  if (!loading) return;
+  const [statusIndex, setStatusIndex] = useState(0);
+  const statusText = loading ? messages[statusIndex] : "SCAN LINK SEKARANG";
+  useEffect(() => {
+    if (!loading) return;
 
-  const interval = setInterval(() => {
-    setStatusIndex((prev) => (prev + 1) % messages.length);
-  }, 3000);
+    const interval = setInterval(() => {
+      setStatusIndex((prev) => (prev + 1) % messages.length);
+    }, 3000);
 
-  return () => clearInterval(interval);
-}, [loading]);
+    return () => clearInterval(interval);
+  }, [loading]);
 
   const handleCekKeamanan = async () => {
     if (!urlInput) return;
@@ -49,6 +67,7 @@ useEffect(() => {
       const data: SecurityResult = await response.json();
       setResult(data);
     } catch (err) {
+      console.log(`Exception while doing something: ${err}`);
       setResult({
         error: "Gagal terhubung ke infrastruktur Artup",
       } as SecurityResult);
@@ -57,7 +76,6 @@ useEffect(() => {
     }
   };
 
-  const finalStatus = result?.finalStatus;
   return (
     <div className="min-h-screen bg-black text-white p-4 md:p-10 font-sans selection:bg-red-600/40 relative overflow-x-hidden">
       {/* --- SIDEBAR/DOCK MEDSOS (Responsive) --- */}
@@ -166,19 +184,9 @@ useEffect(() => {
                         GLOBAL ENGINE:
                       </span>
                       <span
-                        className={`font-black tracking-widest text-xs md:text-sm ${
-                          result.googleStatus === "BAHAYA"
-                            ? "text-red-500"
-                            : result.googleStatus === "ADA CELAH"
-                              ? "text-orange-500"
-                              : "text-green-500"
-                        }`}
+                        className={`font-black tracking-widest text-xs md:text-sm ${getGoogle.color}`}
                       >
-                        {result.googleStatus === "BAHAYA"
-                          ? "⚠️ BLACKLISTED"
-                          : result.googleStatus === "ADA CELAH"
-                            ? "❓ BELUM TERVERIFIKASI"
-                            : "✔️ VERIFIED"}
+                        {getGoogle.label}
                       </span>
                     </div>
 
@@ -188,22 +196,13 @@ useEffect(() => {
                         VIRUS ENGINE:
                       </span>
                       <span
-                        className={`font-black tracking-widest text-xs md:text-sm ${
-                          result.virusTotal === "BAHAYA"
-                            ? "text-red-500"
-                            : result.virusTotal === "TIDAK ADA DATA"
-                              ? "text-orange-500"
-                              : "text-green-500"
-                        }`}
+                        className={`font-black tracking-widest text-xs md:text-sm ${getVirus.color}`}
                       >
                         {result.virusTotal === "BAHAYA"
                           ? `⚠️ DETECTED (${result.vtDetails?.malicious || 0} Engines)`
-                          : result.virusTotal === "TIDAK ADA DATA"
-                            ? "NO RECORD"
-                            : "✔️ NO VIRUS"}
+                          : getVirus.label}
                       </span>
                     </div>
-
                     {/* ARTUP LOGIC */}
                     <div className="flex flex-col gap-2">
                       <span className="text-zinc-500 uppercase tracking-widest text-[9px] font-bold">
@@ -213,7 +212,7 @@ useEffect(() => {
                         result.heuristicFlags.map(
                           (flag: string, index: number) => (
                             <span
-                              key={index}
+                              key={flag} // Menggunakan string flag itu sendiri sebagai key yang unik
                               className="text-orange-400 text-xs font-bold"
                             >
                               ⚠️ {flag}
@@ -236,7 +235,7 @@ useEffect(() => {
                         <div className="h-3 bg-zinc-800 rounded-full overflow-hidden">
                           <div
                             style={{ width: `${result.trustScore}%` }}
-                            className={`h-full ${result.trustScore < 50 ? "bg-red-500" : result.trustScore < 90 ? "bg-orange-500" : "bg-green-500"}`}
+                            className={`h-full ${getTrustColor(result.trustScore)}`}
                           />
                         </div>
                         <p className="mt-2 font-black">
