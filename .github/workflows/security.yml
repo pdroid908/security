@@ -2,97 +2,108 @@ name: Enterprise DevSecOps Pipeline
 
 on:
   push:
-    branches:
-      - main
-      - master
-      - develop
-      
+    branches: [main, master, develop]
   pull_request:
-    branches:
-      - main
-      - master
+    branches: [main, master]
+
+concurrency:
+  group: devsecops-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-   security-quality-check:
+
+  quality-security:
     runs-on: ubuntu-latest
 
-
     permissions:
-     contents: read
-     security-events: write
+      contents: read
+      security-events: write
 
     steps:
-  # =========================
-  # CHECKOUT SOURCE
-  # =========================
-    - name: Checkout Repository
-      uses: actions/checkout@v4
 
-  # =========================
-  # NODE ENVIRONMENT
-  # =========================
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20
-        cache: npm
+      # =========================
+      # CHECKOUT
+      # =========================
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-  # =========================
-  # INSTALL DEPENDENCIES
-  # =========================
-    - name: Install Dependencies
-      run: npm ci
+      # =========================
+      # NODE SETUP
+      # =========================
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
 
-  # =========================
-  # LINT CHECK
-  # =========================
-    - name: Run ESLint
-      run: npm run lint
+      # =========================
+      # INSTALL DEPENDENCIES
+      # =========================
+      - name: Install Dependencies
+        run: npm ci
 
-  # =========================
-  # DEPENDENCY SECURITY AUDIT
-  # =========================
-    - name: Run NPM Audit
-      run: npm audit --audit-level=high
+      # =========================
+      # LINT (FAIL FAST)
+      # =========================
+      - name: Run ESLint
+        run: npm run lint
 
-  # =========================
-  # SECRET SCAN
-  # =========================
-    - name: Run Gitleaks Scan
-      uses: gitleaks/gitleaks-action@v2
+      # =========================
+      # NPM AUDIT (FAIL FAST)
+      # =========================
+      - name: Run NPM Audit
+        run: npm audit --audit-level=high
 
-  # =========================
-  # SONARCLOUD ANALYSIS
-  # =========================
-    - name: SonarCloud Scan
-      uses: SonarSource/sonarqube-scan-action@v6
-      env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      # =========================
+      # SECRET SCAN (FAIL FAST)
+      # =========================
+      - name: Run Gitleaks Scan
+        uses: gitleaks/gitleaks-action@v2
 
-  # =========================
-  # PRODUCTION BUILD TEST
-  # =========================
-    - name: Build Application
-      run: npm run build
+      # =========================
+      # SONARQUBE / SONARCLOUD ANALYSIS
+      # =========================
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # =========================
-  # BUILD SIZE CHECK
-  # =========================
-    - name: Check Build Size
-      run: du -sh .next
+  build:
+    runs-on: ubuntu-latest
+    needs: quality-security
 
-  # =========================
-  # SAVE BUILD ARTIFACT
-  # =========================
-    - name: Upload Build Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: next-build
-        path: .next
+    steps:
 
-  # =========================
-  # SUCCESS MESSAGE
-  # =========================
-    - name: Pipeline Success
-      run: echo "All security and quality checks passed."
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install Dependencies
+        run: npm ci
+
+      # =========================
+      # BUILD APP
+      # =========================
+      - name: Build Application
+        run: npm run build
+
+      # =========================
+      # BUILD SIZE CHECK
+      # =========================
+      - name: Check Build Size
+        run: du -sh .next
+
+      # =========================
+      # UPLOAD ARTIFACT
+      # =========================
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-build
+          path: .next
