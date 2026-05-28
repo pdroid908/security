@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { SecurityResult } from "@/types";
 
+// 1. Tambahkan fungsi ini di atas komponen SecurityPage
 
 export default function SecurityPage() {
   const [urlInput, setUrlInput] = useState("");
@@ -49,8 +50,10 @@ export default function SecurityPage() {
 
       const data: SecurityResult = await response.json();
       setResult(data);
-    }  catch (err) {
-      setResult({ error: "Gagal terhubung ke infrastruktur Artup" } as SecurityResult);
+    } catch (err) {
+      setResult({
+        error: "Gagal terhubung ke infrastruktur Artup",
+      } as SecurityResult);
     } finally {
       setLoading(false);
     }
@@ -60,10 +63,6 @@ export default function SecurityPage() {
   return (
     <div className="min-h-screen bg-black text-white p-4 md:p-10 font-sans selection:bg-red-600/40 relative overflow-x-hidden">
       {/* --- SIDEBAR/DOCK MEDSOS (Responsive) --- */}
-      
-
-
-
 
       <aside className="fixed bottom-4 left-1/2 -translate-x-1/2 md:translate-x-0 md:bottom-auto md:top-1/2 md:right-4 md:left-auto z-50 flex flex-row md:flex-col gap-3 bg-zinc-900/80 md:bg-transparent p-3 md:p-0 rounded-full md:rounded-none border border-zinc-800 md:border-none backdrop-blur-md md:backdrop-blur-none shadow-2xl md:shadow-none">
         <a
@@ -91,10 +90,6 @@ export default function SecurityPage() {
           My TikTok
         </a>
       </aside>
-
-      
-
-
 
       <div className="max-w-2xl mx-auto">
         <header className="text-center mb-8 md:mb-12">
@@ -127,123 +122,133 @@ export default function SecurityPage() {
           </button>
         </div>
 
-        {result && !result.error && (
-          <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
-            <div
-              className={`p-6 md:p-10 rounded-[2.5rem] border-2 md:border-4 transition-all duration-700 shadow-2xl ${
-                finalStatus === "BAHAYA"
-                  ? "bg-red-950/80 border-red-600 shadow-[0_0_60px_rgba(220,38,38,0.2)]"
-                  : finalStatus === "Hati-hati"
-                    ? "bg-orange-950/80 border-orange-600 shadow-[0_0_40px_rgba(249,115,22,0.15)]"
-                    : "bg-zinc-900/90 border-green-600 shadow-[0_0_40_rgba(34,197,94,0.15)]"
-              }`}
-            >
-              <h2 className="text-2xl md:text-4xl font-black italic mb-6 md:mb-10 leading-tight uppercase tracking-tighter text-center">
-                {finalStatus === "BAHAYA"
-                  ? "🚨 WEBSITE BERBAHAYA"
-                  : finalStatus === "HATI-HATI"
-                    ? "⚠️ PERLU KEWASPADAAN"
-                    : finalStatus === "AMAN"
-                      ? "✅ WEBSITE AMAN"
-                      : "🛡️ AMAN TERVERIFIKASI"}
-              </h2>
+        {result && !result.error && (() => {
+          // 1. Ambil status yang pasti ada
+          const status = result.finalStatus || "AMAN";
 
-              <div className="bg-black/60 backdrop-blur-md p-5 md:p-7 rounded-3xl space-y-5 border border-white/5">
-                <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-1 border-b border-white/5 pb-4">
-                  <span className="text-zinc-500 uppercase tracking-widest text-[9px] font-bold">
-                    GLOBAL ENGINE:
-                  </span>
-                  <span
-                    className={`font-black tracking-widest text-xs md:text-sm ${
-                      result.googleStatus === "BAHAYA"
-                        ? "text-red-500"
-                        : result.googleStatus === "ADA CELAH"
-                          ? "text-orange-500"
-                          : "text-green-500"
-                    }`}
-                  >
-                    {result.googleStatus === "BAHAYA"
-                      ? "⚠️ BLACKLISTED"
-                      : result.googleStatus === "ADA CELAH"
-                        ? "❓ BELUM TERVERIFIKASI"
-                        : "✔️  VERIFIED"}
-                  </span>
-                </div>
+          const getContainerStyles = (s: string) => {
+            switch (s) {
+              case "BAHAYA": return "bg-red-950/80 border-red-600 shadow-[0_0_60px_rgba(220,38,38,0.2)]";
+              case "HATI-HATI": return "bg-orange-950/80 border-orange-600 shadow-[0_0_40px_rgba(249,115,22,0.15)]";
+              default: return "bg-zinc-900/90 border-green-600 shadow-[0_0_40px_rgba(34,197,94,0.15)]";
+            }
+          };
 
-                <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-1 border-b border-white/5 pb-4">
-                  <span className="text-zinc-500 uppercase tracking-widest text-[9px] font-bold">
-                    VIRUS ENGINE:
-                  </span>
-                  <span
-                    className={`font-black tracking-widest text-xs md:text-sm ${result.virusTotal === "BAHAYA" ? "text-red-500" : result.virusTotal === "TIDAK ADA DATA" ? "text-orange-500" : "text-green-500"}`}
-                  >
-                    {result.virusTotal === "BAHAYA"
-                      ? `⚠️ DETECTED (${result.vtDetails?.malicious || 0} Engines)`
-                      : result.virusTotal === "TIDAK ADA DATA"
-                        ? "NO RECORD"
-                        : "✔️ NO VIRUS"}
-                  </span>
-                </div>
+          const getHeaderText = (s: string) => {
+            switch (s) {
+              case "BAHAYA": return "🚨 WEBSITE BERBAHAYA";
+              case "HATI-HATI": return "⚠️ PERLU KEWASPADAAN";
+              case "AMAN": return "✅ WEBSITE AMAN";
+              default: return "🛡️ AMAN TERVERIFIKASI";
+            }
+          };
 
-                <div className="flex flex-col gap-2">
-                  <span className="text-zinc-500 uppercase tracking-widest text-[9px] font-bold">
-                    ARTUP LOGIC:
-                  </span>
+            return (
+              <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
+                <div
+                  className={`p-6 md:p-10 rounded-[2.5rem] border-2 md:border-4 transition-all duration-700 shadow-2xl ${getContainerStyles(status)}`}
+                >
+                  <h2 className="text-2xl md:text-4xl font-black italic mb-6 md:mb-10 leading-tight uppercase tracking-tighter text-center">
+                    {getHeaderText(status)}
+                  </h2>
 
-                  {result.heuristicFlags?.length > 0 ? (
-                    result.heuristicFlags.map((flag: string, index: number) => (
-                      <span
-                        key={index}
-                        className="text-orange-400 text-xs font-bold"
-                      >
-                        ⚠️ {flag}
+                  <div className="bg-black/60 backdrop-blur-md p-5 md:p-7 rounded-3xl space-y-5 border border-white/5">
+                    {/* GLOBAL ENGINE */}
+                    <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-1 border-b border-white/5 pb-4">
+                      <span className="text-zinc-500 uppercase tracking-widest text-[9px] font-bold">
+                        GLOBAL ENGINE:
                       </span>
-                    ))
-                  ) : (
-                    <span className="text-green-500 text-xs font-bold">
-                      🛡️ Tidak ada indikator manipulasi
-                    </span>
-                  )}
-                </div>
-
-                <div className="border-b border-white/5 pb-4">
-                  <span className="text-zinc-500 uppercase tracking-widest text-[9px] font-bold">
-                    TRUST SCORE
-                  </span>
-
-                  <div className="mt-2">
-                    <div className="h-3 bg-zinc-800 rounded-full overflow-hidden">
-                      <div
-                        style={{
-                          width: `${result.trustScore}%`,
-                        }}
-                        className={`h-full ${
-                          result.trustScore < 50
-                            ? "bg-red-500"
-                            : result.trustScore < 90
-                              ? "bg-orange-500"
-                              : "bg-green-500"
+                      <span
+                        className={`font-black tracking-widest text-xs md:text-sm ${
+                          result.googleStatus === "BAHAYA"
+                            ? "text-red-500"
+                            : result.googleStatus === "ADA CELAH"
+                              ? "text-orange-500"
+                              : "text-green-500"
                         }`}
-                      />
+                      >
+                        {result.googleStatus === "BAHAYA"
+                          ? "⚠️ BLACKLISTED"
+                          : result.googleStatus === "ADA CELAH"
+                            ? "❓ BELUM TERVERIFIKASI"
+                            : "✔️ VERIFIED"}
+                      </span>
                     </div>
 
-                    <p className="mt-2 font-black">{result.trustScore}/100</p>
+                    {/* VIRUS ENGINE */}
+                    <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-1 border-b border-white/5 pb-4">
+                      <span className="text-zinc-500 uppercase tracking-widest text-[9px] font-bold">
+                        VIRUS ENGINE:
+                      </span>
+                      <span
+                        className={`font-black tracking-widest text-xs md:text-sm ${
+                          result.virusTotal === "BAHAYA"
+                            ? "text-red-500"
+                            : result.virusTotal === "TIDAK ADA DATA"
+                              ? "text-orange-500"
+                              : "text-green-500"
+                        }`}
+                      >
+                        {result.virusTotal === "BAHAYA"
+                          ? `⚠️ DETECTED (${result.vtDetails?.malicious || 0} Engines)`
+                          : result.virusTotal === "TIDAK ADA DATA"
+                            ? "NO RECORD"
+                            : "✔️ NO VIRUS"}
+                      </span>
+                    </div>
+
+                    {/* ARTUP LOGIC */}
+                    <div className="flex flex-col gap-2">
+                      <span className="text-zinc-500 uppercase tracking-widest text-[9px] font-bold">
+                        ARTUP LOGIC:
+                      </span>
+                      {result.heuristicFlags?.length > 0 ? (
+                        result.heuristicFlags.map(
+                          (flag: string, index: number) => (
+                            <span
+                              key={index}
+                              className="text-orange-400 text-xs font-bold"
+                            >
+                              ⚠️ {flag}
+                            </span>
+                          ),
+                        )
+                      ) : (
+                        <span className="text-green-500 text-xs font-bold">
+                          🛡️ Tidak ada indikator manipulasi
+                        </span>
+                      )}
+                    </div>
+
+                    {/* TRUST SCORE */}
+                    <div className="border-b border-white/5 pb-4">
+                      <span className="text-zinc-500 uppercase tracking-widest text-[9px] font-bold">
+                        TRUST SCORE
+                      </span>
+                      <div className="mt-2">
+                        <div className="h-3 bg-zinc-800 rounded-full overflow-hidden">
+                          <div
+                            style={{ width: `${result.trustScore}%` }}
+                            className={`h-full ${result.trustScore < 50 ? "bg-red-500" : result.trustScore < 90 ? "bg-orange-500" : "bg-green-500"}`}
+                          />
+                        </div>
+                        <p className="mt-2 font-black">
+                          {result.trustScore}/100
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* MESSAGE */}
+                    <div className="mt-8 text-center px-2">
+                      <p className="font-black text-[10px] md:text-xs uppercase tracking-widest leading-relaxed opacity-90 text-zinc-200">
+                        {result.userMessage}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
-
-              <div className="mt-8 text-center px-2">
-                <p className="font-black text-[10px] md:text-xs uppercase tracking-widest leading-relaxed opacity-90 text-zinc-200">
-                  <p className="font-black text-[10px] md:text-xs uppercase tracking-widest leading-relaxed opacity-90 text-zinc-200">
-                    {result.userMessage}
-                  </p>
-                  
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
+            );
+          })()}
         {result?.error && (
           <div className="p-5 bg-red-600/10 border border-red-600/50 rounded-2xl text-center text-red-500 text-xs font-bold uppercase tracking-widest animate-bounce">
             {result.error}
@@ -251,14 +256,12 @@ export default function SecurityPage() {
         )}
       </div>
 
-      
-
       <footer className="mt-20 text-center pb-10">
-
         <div>
-        <p className="text-[9px] text-zinc-800 font-black uppercase tracking-[0.5em]">
-          ARTUP STUDIO Security Division &copy; 2026
-        </p></div>
+          <p className="text-[9px] text-zinc-800 font-black uppercase tracking-[0.5em]">
+            ARTUP STUDIO Security Division &copy; 2026
+          </p>
+        </div>
       </footer>
     </div>
   );

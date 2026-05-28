@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-export const runtime = 'edge';
+export const runtime = "edge";
 
 const whitelist = [
   // --- KOMUNIKASI & MEDSOS (Official Only) ---
@@ -42,7 +42,7 @@ const whitelist = [
   "microsoft.com",
   "android.com",
   "cloudflare.com",
-  
+
   "github.com", // Penting untuk developer
 
   // --- PEMERINTAH, PENDIDIKAN & MILITER (Induk TLD) ---
@@ -137,11 +137,10 @@ const sensitiveKeywords = [
   "hadiah",
   "win",
   "suprise",
-  "reward"
+  "reward",
 ];
 
 export async function POST(req: Request) {
- 
   try {
     const { url: inputUrl } = await req.json();
     if (!inputUrl)
@@ -156,8 +155,8 @@ export async function POST(req: Request) {
       try {
         const decoded = atob(url);
         if (decoded.startsWith("http")) url = decoded;
-      } catch (e) {
-        /* ignore */
+      } catch (_) {
+         
       }
     }
 
@@ -230,133 +229,134 @@ export async function POST(req: Request) {
 
     // 2. FUNGSI VIRUSTOTAL (DIPERBAIKI)
     const getVirusTotalData = async (targetUrl: string) => {
-  const cleanUrl = targetUrl.trim();
+      const cleanUrl = targetUrl.trim();
 
-  const headers = {
-    "x-apikey": process.env.VIRUSTOTAL_API_KEY as string,
-  };
+      const headers = {
+        "x-apikey": process.env.VIRUSTOTAL_API_KEY as string,
+      };
 
-  try {
-    // ====================================================
-    // CEK HASIL YANG SUDAH ADA DULU
-    // ====================================================
+      try {
+        // ====================================================
+        // CEK HASIL YANG SUDAH ADA DULU
+        // ====================================================
 
-    const urlId = Buffer.from(cleanUrl)
-      .toString("base64")
-      .replace(/=/g, "")
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_");
+        const urlId = Buffer.from(cleanUrl)
+          .toString("base64")
+          .replace(/[=+/]/g, (match) => {
+            switch (match) {
+              case "=":
+                return "";
+              case "+":
+                return "-";
+              case "/":
+                return "_";
+              default:
+                return match;
+            }
+          });
 
-    const existingRes = await fetch(
-      `https://www.virustotal.com/api/v3/urls/${urlId}`,
-      { headers }
-    );
+        const existingRes = await fetch(
+          `https://www.virustotal.com/api/v3/urls/${urlId}`,
+          { headers },
+        );
 
-    if (existingRes.ok) {
-      const existingData = await existingRes.json();
+        if (existingRes.ok) {
+          const existingData = await existingRes.json();
 
-      if (existingData?.data?.attributes?.last_analysis_stats) {
-        console.log("[VT] Menggunakan hasil yang sudah tersedia");
-        return existingData;
+          if (existingData?.data?.attributes?.last_analysis_stats) {
+            console.log("[VT] Menggunakan hasil yang sudah tersedia");
+            return existingData;
+          }
+        }
+
+        // ====================================================
+        // BELUM ADA DATA → KIRIM SCAN BARU
+        // ====================================================
+
+        console.log("[VT] Mengirim scan baru...");
+
+        const scanRes = await fetch("https://www.virustotal.com/api/v3/urls", {
+          method: "POST",
+          headers: {
+            ...headers,
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            url: cleanUrl,
+          }),
+        });
+
+        if (!scanRes.ok) {
+          console.error("[VT] Gagal submit scan");
+          return null;
+        }
+
+        const scanData = await scanRes.json();
+
+        const analysisId = scanData?.data?.id;
+
+        if (!analysisId) {
+          console.error("[VT] Analysis ID tidak ditemukan");
+          return null;
+        }
+
+        console.log(`[VT] Analysis ID: ${analysisId}`);
+
+        // ====================================================
+        // TUNGGU SAMPAI COMPLETED
+        // ====================================================
+
+        let completed = false;
+
+        for (let attempt = 1; attempt <= 2; attempt++) {
+          const analysisRes = await fetch(
+            `https://www.virustotal.com/api/v3/analyses/${analysisId}`,
+            { headers },
+          );
+
+          if (!analysisRes.ok) {
+            break;
+          }
+
+          const analysisData = await analysisRes.json();
+
+          const status = analysisData?.data?.attributes?.status;
+
+          console.log(`[VT] Polling ${attempt}/20 | Status: ${status}`);
+
+          if (status === "completed") {
+            completed = true;
+            break;
+          }
+
+          await new Promise((resolve) => setTimeout(resolve, 7000));
+        }
+
+        if (!completed) {
+          console.warn(
+            "[VT] Analysis belum selesai, mengambil hasil sementara",
+          );
+        }
+
+        // ====================================================
+        // AMBIL HASIL FINAL
+        // ====================================================
+
+        const finalRes = await fetch(
+          `https://www.virustotal.com/api/v3/urls/${urlId}`,
+          { headers },
+        );
+
+        if (!finalRes.ok) {
+          return null;
+        }
+
+        return await finalRes.json();
+      } catch (error) {
+        console.error("[VT ERROR]", error);
+        return null;
       }
-    }
-
-    // ====================================================
-    // BELUM ADA DATA → KIRIM SCAN BARU
-    // ====================================================
-
-    console.log("[VT] Mengirim scan baru...");
-
-    const scanRes = await fetch(
-      "https://www.virustotal.com/api/v3/urls",
-      {
-        method: "POST",
-        headers: {
-          ...headers,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({
-          url: cleanUrl,
-        }),
-      }
-    );
-
-    if (!scanRes.ok) {
-      console.error("[VT] Gagal submit scan");
-      return null;
-    }
-
-    const scanData = await scanRes.json();
-
-    const analysisId = scanData?.data?.id;
-
-    if (!analysisId) {
-      console.error("[VT] Analysis ID tidak ditemukan");
-      return null;
-    }
-
-    console.log(`[VT] Analysis ID: ${analysisId}`);
-
-    // ====================================================
-    // TUNGGU SAMPAI COMPLETED
-    // ====================================================
-
-    let completed = false;
-
-    for (let attempt = 1; attempt <= 2; attempt++) {
-      const analysisRes = await fetch(
-        `https://www.virustotal.com/api/v3/analyses/${analysisId}`,
-        { headers }
-      );
-
-      if (!analysisRes.ok) {
-        break;
-      }
-
-      const analysisData = await analysisRes.json();
-
-      const status =
-        analysisData?.data?.attributes?.status;
-
-      console.log(
-        `[VT] Polling ${attempt}/20 | Status: ${status}`
-      );
-
-      if (status === "completed") {
-        completed = true;
-        break;
-      }
-
-      await new Promise((resolve) =>
-        setTimeout(resolve, 7000)
-      );
-    }
-
-    if (!completed) {
-      console.warn(
-        "[VT] Analysis belum selesai, mengambil hasil sementara"
-      );
-    }
-
-    // ====================================================
-    // AMBIL HASIL FINAL
-    // ====================================================
-
-    const finalRes = await fetch(
-      `https://www.virustotal.com/api/v3/urls/${urlId}`,
-      { headers }
-    );
-
-    if (!finalRes.ok) {
-      return null;
-    }
-
-    return await finalRes.json();
-  } catch (error) {
-    console.error("[VT ERROR]", error);
-    return null;
-  }
-};
+    };
 
     // 3. FUNGSI GOOGLE DENGAN DEBUG LENGKAP
     const fetchGoogleWithTimeout = async (targetUrl: string) => {
@@ -400,11 +400,14 @@ export async function POST(req: Request) {
           );
         }
         return data;
-      } catch (err: any) {
-        if (err.name === "AbortError") {
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name === "AbortError") {
           console.error("[GOOGLE] TIMEOUT: Koneksi ke Google terlalu lama.");
         } else {
-          console.error("[GOOGLE] ERROR:", err.message);
+          console.error(
+            "[GOOGLE] ERROR:",
+            err instanceof Error ? err.message : "Unknown error",
+          );
         }
         return { matches: [] };
       }
@@ -453,11 +456,13 @@ export async function POST(req: Request) {
     }
 
     // --- 6. ARTUP HEURISTIC (URUTAN PRIORITAS BARU) ---
-    let artupHeuristic = [];
+    const artupHeuristic: string[] = []; // Gunakan const, bukan let
 
     if (!isWhitelisted) {
       trustScore -= 10;
-      artupHeuristic.push("Domain belum terverifikasi, jangan masukan PIN, OTP, password");
+      artupHeuristic.push(
+        "Domain belum terverifikasi, jangan masukan PIN, OTP, password",
+      );
     }
 
     if (hasRedirectParam) {
@@ -519,10 +524,15 @@ export async function POST(req: Request) {
 
       heuristicFlags: artupHeuristic,
     });
-  } catch (error: any) {
-    console.error("CRITICAL ERROR:", error);
+  } catch (error: unknown) {
+    // Gunakan variabel 'message' yang sudah kita buat tadi
+    const errorMessage =
+      error instanceof Error ? error.message : "Internal Server Error";
+
+    console.error("[CRITICAL ERROR]", error);
+
     return NextResponse.json(
-      { error: "Internal Server Error", msg: error.message },
+      { error: "Internal Server Error", msg: errorMessage }, // Gunakan errorMessage di sini
       { status: 500 },
     );
   }
