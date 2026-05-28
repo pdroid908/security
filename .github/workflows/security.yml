@@ -1,0 +1,36 @@
+name: security pipe
+
+on:
+  push:
+    branches: 
+     - main
+     - master
+
+  pull_request:
+
+jobs:
+  security_check:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: check reposiroty
+      uses: action/checkout@v4
+
+    - name: setup nodejs
+      uses: action/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: install dependancies
+      run: npm install
+
+    - name: run eslint
+      run: npm audit --audit-level=high
+
+    - name: build next js
+      run: npm run build
+
+    - name: run git leaks
+      uses: gitleaks/gitleaks/action@v2
+
+

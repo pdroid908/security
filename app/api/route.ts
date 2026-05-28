@@ -42,6 +42,7 @@ const whitelist = [
   "microsoft.com",
   "android.com",
   "cloudflare.com",
+  
   "github.com", // Penting untuk developer
 
   // --- PEMERINTAH, PENDIDIKAN & MILITER (Induk TLD) ---
