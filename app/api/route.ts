@@ -133,6 +133,10 @@ const sensitiveKeywords = [
   "verifikasi",
   "akun",
   "banking",
+  "hadiah",
+  "win",
+  "suprise",
+  "reward"
 ];
 
 export async function POST(req: Request) {
@@ -347,10 +351,17 @@ export async function POST(req: Request) {
     }
 
     return await finalRes.json();
-  } catch (error) {
-    console.error("[VT ERROR]", error);
-    return null;
+  } catch (error: any) {
+  console.error("[VT ERROR DETAIL]:", error.message);
+  
+  // Jika error karena fetch, kita lihat response statusnya
+  if (error.response) {
+     const errorData = await error.response.text();
+     console.error("[VT RESPONSE BODY]:", errorData);
   }
+  
+  return null;
+}
 };
 
     // 3. FUNGSI GOOGLE DENGAN DEBUG LENGKAP

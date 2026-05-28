@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect } from "react";
-import Link from "next/link";
 
 export default function SecurityPage() {
   const [urlInput, setUrlInput] = useState("");
@@ -38,7 +37,7 @@ export default function SecurityPage() {
         setStatusText(messages[i]);
       }, 3000);
     } else {
-      setStatusText("SCAN LINK SEKARANG");
+      setStatusText("SCAN LINK SEKARANG!");
     }
     return () => clearInterval(interval);
   }, [loading]);
