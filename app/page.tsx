@@ -266,9 +266,11 @@ export default function SecurityPage() {
       
 
       <footer className="mt-20 text-center pb-10">
+
+        <div>
         <p className="text-[9px] text-zinc-800 font-black uppercase tracking-[0.5em]">
           ARTUP STUDIO Security Division &copy; 2026
-        </p>
+        </p></div>
       </footer>
     </div>
   );
