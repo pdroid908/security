@@ -327,7 +327,7 @@ export async function POST(req: Request) {
       }
 
       await new Promise((resolve) =>
-        setTimeout(resolve, 10000)
+        setTimeout(resolve, 7000)
       );
     }
 
@@ -351,17 +351,10 @@ export async function POST(req: Request) {
     }
 
     return await finalRes.json();
-  } catch (error: any) {
-  console.error("[VT ERROR DETAIL]:", error.message);
-  
-  // Jika error karena fetch, kita lihat response statusnya
-  if (error.response) {
-     const errorData = await error.response.text();
-     console.error("[VT RESPONSE BODY]:", errorData);
+  } catch (error) {
+    console.error("[VT ERROR]", error);
+    return null;
   }
-  
-  return null;
-}
 };
 
     // 3. FUNGSI GOOGLE DENGAN DEBUG LENGKAP
