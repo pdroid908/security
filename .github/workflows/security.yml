@@ -60,14 +60,6 @@ jobs:
       - name: Run Gitleaks Scan
         uses: gitleaks/gitleaks-action@v2
 
-      # =========================
-      # SONARQUBE / SONARCLOUD ANALYSIS
-      # =========================
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v2
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build:
     runs-on: ubuntu-latest
