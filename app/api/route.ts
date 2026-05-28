@@ -141,7 +141,7 @@ const sensitiveKeywords = [
 ];
 
 export async function POST(req: Request) {
-  const startTime = Date.now();
+ 
   try {
     const { url: inputUrl } = await req.json();
     if (!inputUrl)

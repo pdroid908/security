@@ -1,26 +1,17 @@
 "use client";
 import { useState, useEffect } from "react";
+import { SecurityResult } from "@/types";
+
 
 export default function SecurityPage() {
   const [urlInput, setUrlInput] = useState("");
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<SecurityResult | null>(null);
   const [loading, setLoading] = useState(false);
 
   const [statusText, setStatusText] = useState("SCAN LINK SEKARANG");
 
-  const [manualVideo, setManualVideo] = useState("tzYhNOu7Bdg"); // Video default saat pertama buka
-  // 1. Simpan ID video tadi di variable atau state
-  const videoId = "tzYhNOu7Bdg";
-
-  const handleManualVideo = (id: string) => {
-    setManualVideo(id);
-    // Scroll otomatis ke video agar terlihat di HP
-    const element = document.getElementById("video-section");
-    element?.scrollIntoView({ behavior: "smooth" });
-  };
-
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setTimeout>;
     if (loading) {
       const messages = [
         "INITIALIZING ARTUP NEURAL CORE...",
@@ -37,7 +28,7 @@ export default function SecurityPage() {
         setStatusText(messages[i]);
       }, 3000);
     } else {
-      setStatusText("SCAN LINK SEKARANG!");
+      setStatusText("SCAN LINK SEKARANG");
     }
     return () => clearInterval(interval);
   }, [loading]);
@@ -56,19 +47,16 @@ export default function SecurityPage() {
         body: JSON.stringify({ url: urlInput }),
       });
 
-      const data = await response.json();
+      const data: SecurityResult = await response.json();
       setResult(data);
-    } catch (error) {
-      setResult({ error: "Gagal menyambung ke Artup Infrastructure" });
+    }  catch (err) {
+      setResult({ error: "Gagal terhubung ke infrastruktur Artup" } as SecurityResult);
     } finally {
       setLoading(false);
-      setStatusText("SCAN LINK SEKARANG");
     }
   };
 
   const finalStatus = result?.finalStatus;
-  const isPublicHosting = result?.details?.isPublicHosting; // Ambil data dari backend
-
   return (
     <div className="min-h-screen bg-black text-white p-4 md:p-10 font-sans selection:bg-red-600/40 relative overflow-x-hidden">
       {/* --- SIDEBAR/DOCK MEDSOS (Responsive) --- */}
