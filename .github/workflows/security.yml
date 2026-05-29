@@ -6,10 +6,6 @@ on:
   schedule:
     - cron: '0 3 * * 1'
 
-concurrency:
-  group: devsecops-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   # 1. GABUNGAN SCAN: Menjalankan semua cek secara bersamaan dalam satu job
   quality-and-security:
