@@ -144,10 +144,13 @@ function validateInput(url: string) {
   if (url.length > 700 || /[<>"'@\s]/.test(url)) return false;
   return true;
 }
-
+interface VTStats {
+  malicious: number;
+  // Tambahkan properti lain yang ada di vtStats jika perlu
+}
 function calculateTrustScore(
   googleStatus: string,
-  vtStats: any,
+  vtStats: VTStats,
   isWhitelisted: boolean,
   hasRedirect: boolean,
   isManipulated: boolean,

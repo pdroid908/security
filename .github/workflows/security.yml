@@ -27,9 +27,10 @@ jobs:
       security-events: write
 
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
-        languages: [javascript-typescript]
+        language: [javascript-typescript]
+
 
     steps:
       - uses: actions/checkout@v4
@@ -73,7 +74,7 @@ jobs:
         run: npm audit --audit-level=high
 
       - name: Gitleaks Secret Scan
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7
 
 
   # =========================
@@ -96,7 +97,7 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/node@master
+        uses: snyk/actions/node@v3.0.0
         env:
          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:

@@ -66,11 +66,6 @@ export default function SecurityPage() {
 
       const data: SecurityResult = await response.json();
       setResult(data);
-    } catch (err) {
-      console.log(`Exception while doing something: ${err}`);
-      setResult({
-        error: "Gagal terhubung ke infrastruktur Artup",
-      } as SecurityResult);
     } finally {
       setLoading(false);
     }
