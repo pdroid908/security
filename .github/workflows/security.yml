@@ -36,33 +36,3 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           args: --severity-threshold=high
-
-  # 2. CODEQL: Jalankan secara paralel dengan job di atas agar hemat waktu
-  
-  # 3. BUILD: Hanya jalan jika scan di atas berhasil
-  build:
-    needs: [quality-and-security]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      # CACHE NEXT.JS: Biar build tidak mulai dari nol
-      - name: Cache Next.js
-        uses: actions/cache@v4
-        with:
-          path: .next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}
-      
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-          
-      - run: npm ci --ignore-scripts
-      - run: npm run build
-      
-      # ARTIFACT: Simpan hasil build
-      - uses: actions/upload-artifact@v4
-        with:
-          name: build-output
-          path: .next/
