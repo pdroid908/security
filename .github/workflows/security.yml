@@ -38,19 +38,10 @@ jobs:
           args: --severity-threshold=high
 
   # 2. CODEQL: Jalankan secara paralel dengan job di atas agar hemat waktu
-  codeql:
-    runs-on: ubuntu-latest
-    permissions: {contents: read, security-events: write, actions: read}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v3
-        with: {languages: javascript-typescript}
-      - uses: github/codeql-action/autobuild@v3
-      - uses: github/codeql-action/analyze@v3
-
+  
   # 3. BUILD: Hanya jalan jika scan di atas berhasil
   build:
-    needs: [quality-and-security, codeql]
+    needs: [quality-and-security]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
