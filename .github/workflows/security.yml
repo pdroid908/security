@@ -2,9 +2,9 @@ name: DevSecOps Optimized Pipeline
 
 on:
   pull_request:
-    branches: [main]
+    branches: [master]
   push:
-    branches: [develop]
+    branches: [master]
   schedule:
     - cron: '0 3 * * 1'
 
