@@ -40,7 +40,7 @@ jobs:
   # 2. CODEQL: Jalankan secara paralel dengan job di atas agar hemat waktu
   codeql:
     runs-on: ubuntu-latest
-    permissions: {contents: read, security-events: write}
+    permissions: {contents: read, security-events: write, actions: read}
     steps:
       - uses: actions/checkout@v4
       - uses: github/codeql-action/init@v3
