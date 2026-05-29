@@ -16,7 +16,7 @@ concurrency:
 jobs:
 
 # =========================
-# 1. FAST SECURITY GATE
+# 1. FAST SECURITY GATEd
 # =========================
   security-fast:
     runs-on: ubuntu-latest
