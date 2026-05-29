@@ -3,13 +3,15 @@ name: DevSecOps Optimized Pipeline
 on:
   pull_request: {branches: [master]}
   push: {branches: [master]}
+  schedule:
+    - cron: '0 3 * * 1'
 
 concurrency:
   group: devsecops-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  # JOB 1: Kualitas & Keamanan (Gabungan Linter, Audit, Snyk, Gitleaks)
+  # 1. GABUNGAN SCAN: Menjalankan semua cek secara bersamaan dalam satu job
   quality-and-security:
     runs-on: ubuntu-latest
     steps:
@@ -17,47 +19,43 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm' # Mengaktifkan cache untuk node_modules
-      
+          cache: 'npm' # Otomatis caching node_modules
       - run: npm ci --ignore-scripts
       
       - name: Lint & Audit
         run: |
           npm run lint
           npm audit --audit-level=high
-
+      
       - name: Gitleaks
-        uses: gitleaks/gitleaks-action@latest
-
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7
+      
       - name: Snyk Scan
-        uses: snyk/actions/node@master
+        uses: snyk/actions/node@9cf6ca713d71123d2d229cc3d7f145b96ea3c518
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           args: --severity-threshold=high
 
-  # JOB 2: CodeQL (Berjalan paralel dengan job 1)
+  # 2. CODEQL: Jalankan secara paralel dengan job di atas agar hemat waktu
   codeql:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      security-events: write
+    permissions: {contents: read, security-events: write}
     steps:
       - uses: actions/checkout@v4
       - uses: github/codeql-action/init@v3
-        with:
-          languages: javascript-typescript
+        with: {languages: javascript-typescript}
       - uses: github/codeql-action/autobuild@v3
       - uses: github/codeql-action/analyze@v3
 
-  # JOB 3: Build & Upload (Hanya jalan jika JOB 1 & 2 sukses)
+  # 3. BUILD: Hanya jalan jika scan di atas berhasil
   build:
     needs: [quality-and-security, codeql]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      # Cache Next.js agar build tidak dari nol
+      
+      # CACHE NEXT.JS: Biar build tidak mulai dari nol
       - name: Cache Next.js
         uses: actions/cache@v4
         with:
@@ -68,13 +66,12 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
-
+          
       - run: npm ci --ignore-scripts
       - run: npm run build
       
-      # Upload hasil build ke Artifact
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+      # ARTIFACT: Simpan hasil build
+      - uses: actions/upload-artifact@v4
         with:
-          name: build-artifact
+          name: build-output
           path: .next/
