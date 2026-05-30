@@ -3,8 +3,6 @@ name: DevSecOps Optimized Pipeline
 on:
   pull_request: {branches: [master]}
   push: {branches: [master]}
-  schedule:
-    - cron: '0 3 * * 1'
 
 concurrency:
   group: devsecops-${{ github.ref }}
